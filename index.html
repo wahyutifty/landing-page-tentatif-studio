@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tentatif Studio - Marketplace Solusi AI Premium</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Three.js for 3D Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        /* Custom Styles - Dark Mode Only */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0A1A;
+            color: #E6EDF3;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Marquee Animation */
+        .marquee-container {
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            -webkit-mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+            mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+        }
+        .marquee-content {
+            display: flex;
+            animation: marquee 40s linear infinite;
+        }
+        .marquee-container:hover .marquee-content {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Hero Canvas for Three.js */
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Scroll-triggered Fade-in Animation */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A1A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #60A5FA;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3B82F6;
+        }
+        
+        /* Admin Modal Styles */
+        .admin-input {
+            background-color: #374151;
+            border-color: #4B5563;
+            color: #E6EDF3;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid;
+        }
+        .tab-button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s, color 0.2s;
+            color: #D1D5DB;
+        }
+        .tab-button:hover {
+            background-color: #374151;
+        }
+        .admin-tab-active {
+            background-color: #1E40AF;
+            color: white;
+            font-weight: 600;
+        }
+        .admin-submit-btn:disabled {
+            background-color: #4B5563;
+            cursor: not-allowed;
+        }
+
+
+        /* FAQ Accordion */
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 200px; /* Adjust as needed */
+        }
+        .faq-item .faq-toggle-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .faq-item.active .faq-toggle-icon {
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- App Container -->
+    <div id="app" class="relative">
+        
+        <!-- Header -->
+        <header class="fixed top-0 left-0 right-0 z-50 bg-gray-900/30 backdrop-blur-md border-b border-gray-500/20">
+            <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <a href="#" class="text-2xl font-bold">Tentatif<span class="text-blue-400">Studio</span></a>
+                <div class="hidden md:flex items-center space-x-8 text-gray-200">
+                    <a href="#hero" class="hover:text-blue-400 transition-colors">Home</a>
+                    <a href="#products" class="hover:text-blue-400 transition-colors">Produk</a>
+                    <a href="#gallery" class="hover:text-blue-400 transition-colors">Galeri</a>
+                    <a href="#testimonials" class="hover:text-blue-400 transition-colors">Testimoni</a>
+                </div>
+                 <button id="admin-button" class="px-4 py-2 text-sm font-medium rounded-md border text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white transition-colors">Admin</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Hero Section -->
+            <section id="hero" class="relative h-screen flex items-center justify-center text-center overflow-hidden">
+                <canvas id="hero-canvas"></canvas>
+                <div class="relative z-10 px-4">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Transformasi Bisnis Anda dengan Solusi AI</h1>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-300">Jelajahi marketplace produk AI premium dari Tentatif Studio untuk meningkatkan efisiensi dan inovasi.</p>
+                    <div class="mt-8 flex justify-center gap-4">
+                        <a href="#products" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Lihat Produk</a>
+                        <a href="https://wa.me/6288985584050" target="_blank" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Hubungi Kami</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Tentatif Studio -->
+            <section id="about" class="py-20 fade-in-section">
+                <div class="container mx-auto px-6 text-center">
+                    <h2 class="text-3xl font-bold mb-2">Apa Itu Tentatif Studio?</h2>
+                    <p class="text-gray-400 max-w-3xl mx-auto mb-12">Kami adalah marketplace terdepan yang menyediakan solusi AI canggih untuk memberdayakan bisnis Anda. Dari otomatisasi pemasaran hingga analisis data mendalam, kami hadir untuk mendorong inovasi dan efisiensi di setiap lini bisnis.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                        <div class="bg-gray-800/50 p-6 rounded-lg shadow-md">
+                            <div class="flex items-center mb-3">
+                                <!-- Inovasi Icon -->
+                                <svg class="w-8 h-8 text-blue-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                <h3 class="text-xl font-bold">Inovasi Terdepan</h3>
+                            </div>
+                            <p class="text-gray-400">Akses produk AI terbaru yang dikembangkan dengan teknologi mutakhir untuk memberikan keunggulan kompetitif.</p>
+                        </div>
+                        <div class="bg-gray-800/50 p-6 rounded-lg shadow-md">
+                            <div class="flex items-center mb-3">
+                                <!-- Kualitas Icon -->
+                                <svg class="w-8 h-8 text-blue-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.955a11.955 11.955 0 018.618-3.04A12.02 12.02 0 0021 8.955a11.955 11.955 0 01-2.382-3.015z"></path></svg>
+                                <h3 class="text-xl font-bold">Kualitas Terpercaya</h3>
+                            </div>
+                            <p class="text-gray-400">Setiap solusi telah melalui kurasi dan pengujian ketat untuk memastikan performa dan keandalan terbaik.</p>
+                        </div>
+                        <div class="bg-gray-800/50 p-6 rounded-lg shadow-md">
+                            <div class="flex items-center mb-3">
+                                <!-- Dukungan Icon -->
+                                <svg class="w-8 h-8 text-blue-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <h3 class="text-xl font-bold">Dukungan Profesional</h3>
+                            </div>
+                            <p class="text-gray-400">Tim ahli kami siap membantu Anda mengintegrasikan dan memaksimalkan potensi dari setiap produk yang Anda pilih.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Gallery -->
+            <section id="gallery" class="py-20 bg-gray-900/50 fade-in-section">
+                <div class="container mx-auto px-6 text-center">
+                    <h2 class="text-3xl font-bold mb-12">Lihat Hasil Karya Kami</h2>
+                </div>
+                <div class="marquee-container">
+                    <div id="gallery-marquee" class="marquee-content space-x-4">
+                        <!-- Dynamic Content from Firebase. Duplicated for smooth loop -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Best Selling Products -->
+            <section id="products" class="py-20 fade-in-section">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl font-bold mb-12 text-center">Produk Terlaris Kami</h2>
+                    <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Dynamic Content from Firebase -->
+                    </div>
+                    <div class="text-center mt-12">
+                        <a href="https://tentatifproduk.vercel.app/" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-transform transform hover:scale-105 inline-block">
+                            Produk Lainnya
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Testimonials -->
+            <section id="testimonials" class="py-20 bg-gray-900/50 fade-in-section">
+                <div class="container mx-auto px-6 text-center">
+                    <h2 class="text-3xl font-bold mb-12">Dipercaya oleh Para Profesional</h2>
+                </div>
+                <div class="marquee-container">
+                    <div id="testimonials-marquee" class="marquee-content space-x-8">
+                        <!-- Dynamic Content from Firebase. Duplicated for smooth loop -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section id="faq" class="py-20 fade-in-section">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl font-bold mb-12 text-center">Pertanyaan yang Sering Diajukan (FAQ)</h2>
+                    <div class="max-w-3xl mx-auto space-y-4" id="faq-container">
+                        <div class="faq-item bg-gray-800/50 border border-gray-700 rounded-lg">
+                            <button class="faq-question w-full flex justify-between items-center text-left p-6 font-semibold">
+                                <span>Apa itu produk AI di Tentatif Studio?</span>
+                                <span class="faq-toggle-icon text-2xl font-light text-blue-500">+</span>
+                            </button>
+                            <div class="faq-answer px-6 pb-6 text-gray-400">
+                                <p>Produk kami adalah solusi perangkat lunak berbasis kecerdasan buatan (AI) yang siap pakai, mulai dari chatbot, alat analisis data, generator konten, hingga sistem otomatisasi untuk berbagai kebutuhan bisnis.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item bg-gray-800/50 border border-gray-700 rounded-lg">
+                            <button class="faq-question w-full flex justify-between items-center text-left p-6 font-semibold">
+                                <span>Bagaimana cara membeli produk?</span>
+                                <span class="faq-toggle-icon text-2xl font-light text-blue-500">+</span>
+                            </button>
+                            <div class="faq-answer px-6 pb-6 text-gray-400">
+                                <p>Anda dapat mengklik tombol "Lihat Detail" pada setiap produk untuk diarahkan ke halaman marketplace utama kami, di mana Anda dapat menyelesaikan proses pembelian dengan aman dan mudah.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item bg-gray-800/50 border border-gray-700 rounded-lg">
+                            <button class="faq-question w-full flex justify-between items-center text-left p-6 font-semibold">
+                                <span>Apakah saya mendapatkan dukungan setelah pembelian?</span>
+                                <span class="faq-toggle-icon text-2xl font-light text-blue-500">+</span>
+                            </button>
+                            <div class="faq-answer px-6 pb-6 text-gray-400">
+                                <p>Tentu saja. Setiap pembelian produk disertai dengan paket dukungan teknis untuk membantu Anda dalam proses instalasi, integrasi, dan penggunaan awal. Paket dukungan lanjutan juga tersedia.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item bg-gray-800/50 border border-gray-700 rounded-lg">
+                            <button class="faq-question w-full flex justify-between items-center text-left p-6 font-semibold">
+                                <span>Bisakah saya meminta kustomisasi produk?</span>
+                                <span class="faq-toggle-icon text-2xl font-light text-blue-500">+</span>
+                            </button>
+                            <div class="faq-answer px-6 pb-6 text-gray-400">
+                                <p>Ya, kami melayani permintaan kustomisasi untuk beberapa produk. Silakan hubungi tim kami melalui WhatsApp untuk mendiskusikan kebutuhan spesifik Anda dan kami akan menyusun solusi yang paling sesuai.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        
+        <!-- Footer -->
+        <footer class="py-12 bg-black/50 text-gray-300">
+            <div class="container mx-auto px-6 text-center">
+                <p>&copy; 2025 Tentatif Studio. Semua Hak Cipta Dilindungi.</p>
+                <p class="text-sm text-gray-500 mt-2">Dibuat dengan ❤️ dan Teknologi AI</p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div id="admin-modal-content" class="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <!-- Login View -->
+            <div id="login-view">
+                <div class="p-8 text-center">
+                    <h3 class="text-2xl font-bold mb-4 text-white">Akses Panel Admin</h3>
+                    <p class="text-gray-400 mb-6">Masukkan kode akses untuk mengelola konten.</p>
+                    <input type="password" id="admin-password" class="w-full max-w-sm mx-auto p-3 rounded-md bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="••••••">
+                    <p id="login-error" class="text-red-500 text-sm mt-2 hidden">Kode akses salah.</p>
+                    <div class="mt-6 flex justify-center gap-4">
+                        <button id="login-submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-md transition-colors">Login</button>
+                        <button id="close-modal-button" class="bg-gray-600 hover:bg-gray-500 text-gray-200 font-bold py-2 px-6 rounded-md transition-colors">Tutup</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="hidden flex-grow flex flex-col">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white">Dashboard Admin</h3>
+                    <button id="logout-button" class="text-sm text-blue-500 hover:underline">Logout</button>
+                </div>
+                <div class="flex-grow flex overflow-hidden">
+                    <!-- Tabs -->
+                    <div class="w-1/4 border-r border-gray-700 p-4">
+                        <nav class="flex flex-col space-y-2">
+                            <button class="tab-button admin-tab-active" data-tab="products-management">Kelola Produk</button>
+                            <button class="tab-button" data-tab="gallery-management">Kelola Galeri</button>
+                            <button class="tab-button" data-tab="testimonials-management">Kelola Testimoni</button>
+                        </nav>
+                    </div>
+                    <!-- Tab Content -->
+                    <div class="w-3/4 p-6 overflow-y-auto text-gray-200">
+                        <!-- Products Management -->
+                        <div id="products-management" class="tab-content">
+                            <h4 class="text-lg font-semibold mb-4">Formulir Produk</h4>
+                            <form id="product-form" class="space-y-4">
+                                <input type="hidden" id="product-id">
+                                <input type="text" id="product-name" placeholder="Nama Produk" class="admin-input" required>
+                                <input type="text" id="product-tagline" placeholder="Tagline" class="admin-input" required>
+                                <input type="url" id="product-imageUrl" placeholder="URL Gambar" class="admin-input" required>
+                                <input type="url" id="product-link" placeholder="URL Tautan Produk" class="admin-input" required>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="text" id="product-price" placeholder="Harga (cth: 50000)" class="admin-input" required>
+                                    <input type="text" id="product-originalPrice" placeholder="Harga Asli (cth: 75000)" class="admin-input">
+                                    <input type="number" id="product-rating" placeholder="Rating (1-5)" step="0.1" min="1" max="5" class="admin-input" required>
+                                    <select id="product-category" class="admin-input" required>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="kreatif">Kreatif</option>
+                                        <option value="bisnis">Bisnis</option>
+                                    </select>
+                                </div>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="product-isBestSeller" class="rounded text-blue-500">
+                                    <span class="ml-2">Jadikan Produk Terlaris (Maks. 6)</span>
+                                </label>
+                                <div class="flex gap-4">
+                                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md admin-submit-btn">Simpan Produk</button>
+                                    <button type="button" id="clear-product-form" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Batal</button>
+                                </div>
+                            </form>
+                            <hr class="my-6 border-gray-700">
+                            <h4 class="text-lg font-semibold mb-4">Daftar Semua Produk</h4>
+                            <div id="admin-products-list" class="space-y-2">
+                                <p class="text-gray-400 text-center italic">Memuat data produk...</p>
+                            </div>
+                        </div>
+
+                        <!-- Gallery Management -->
+                        <div id="gallery-management" class="tab-content hidden">
+                            <h4 class="text-lg font-semibold mb-4">Tambah Gambar Galeri</h4>
+                            <form id="gallery-form" class="flex gap-4 items-start">
+                                <input type="url" id="gallery-url" placeholder="URL Gambar" class="admin-input flex-grow" required>
+                                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md admin-submit-btn">Tambah</button>
+                            </form>
+                            <hr class="my-6 border-gray-700">
+                            <h4 class="text-lg font-semibold mb-4">Daftar Gambar Galeri</h4>
+                            <div id="admin-gallery-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                 <p class="text-gray-400 text-center italic col-span-full">Memuat data galeri...</p>
+                            </div>
+                        </div>
+
+                        <!-- Testimonials Management -->
+                        <div id="testimonials-management" class="tab-content hidden">
+                            <h4 class="text-lg font-semibold mb-4">Formulir Testimoni</h4>
+                            <form id="testimonial-form" class="space-y-4">
+                                <input type="hidden" id="testimonial-id">
+                                <textarea id="testimonial-quote" placeholder="Kutipan" class="admin-input h-24" required></textarea>
+                                <input type="text" id="testimonial-author" placeholder="Penulis" class="admin-input" required>
+                                <input type="url" id="testimonial-profileUrl" placeholder="URL Foto Profil (Opsional)" class="admin-input">
+                                <div class="flex gap-4">
+                                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md admin-submit-btn">Simpan Testimoni</button>
+                                    <button type="button" id="clear-testimonial-form" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Batal</button>
+                                </div>
+                            </form>
+                            <hr class="my-6 border-gray-700">
+                            <h4 class="text-lg font-semibold mb-4">Daftar Testimoni</h4>
+                            <div id="admin-testimonials-list" class="space-y-2">
+                                <p class="text-gray-400 text-center italic">Memuat data testimoni...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy, where, getDocs, limit, updateDoc
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURATION ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Fallback config for local testing if needed
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // The admin passcode is obfuscated in Base64 to prevent it from being easily readable in the source code.
+        const OBFUSCATED_PASSCODE = 'MjM0Njc4'; // This is '234678' in Base64
+        const BEST_SELLER_LIMIT = 6;
+
+        // --- INITIALIZATION ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- STATE MANAGEMENT ---
+        let allProducts = [];
+        let allGalleryItems = [];
+        let allTestimonials = [];
+
+        // Collection References
+        const productsCol = collection(db, `/artifacts/${appId}/public/data/products`);
+        const galleryCol = collection(db, `/artifacts/${appId}/public/data/gallery`);
+        const testimonialsCol = collection(db, `/artifacts/${appId}/public/data/testimonials`);
+
+        // --- UI ELEMENTS ---
+        const adminModal = document.getElementById('admin-modal');
+        const adminButton = document.getElementById('admin-button');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const loginView = document.getElementById('login-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const adminPasswordInput = document.getElementById('admin-password');
+        const loginSubmitButton = document.getElementById('login-submit');
+        const loginError = document.getElementById('login-error');
+        const logoutButton = document.getElementById('logout-button');
+        
+        // --- THREE.JS HERO ANIMATION ---
+        let scene, camera, renderer, objects = [], starSystems = [];
+        const mouse = { x: 0, y: 0 };
+
+        function initThreeJS() {
+            const container = document.getElementById('hero');
+            if (!container) return;
+            
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('hero-canvas'), alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            
+            const geometries = [
+                new THREE.IcosahedronGeometry(1, 0),
+                new THREE.BoxGeometry(1.5, 1.5, 1.5),
+                new THREE.TorusKnotGeometry(0.8, 0.3, 100, 16)
+            ];
+            
+            const material = new THREE.MeshBasicMaterial({ color: 0x60A5FA, wireframe: true });
+
+            geometries.forEach((geometry) => {
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.x = (Math.random() - 0.5) * 10;
+                mesh.position.y = (Math.random() - 0.5) * 10;
+                mesh.position.z = (Math.random() - 0.5) * 10;
+                mesh.rotation.x = Math.random() * 2 * Math.PI;
+                mesh.rotation.y = Math.random() * 2 * Math.PI;
+                scene.add(mesh);
+                objects.push(mesh);
+            });
+
+            // Starfield
+            const starConfigs = [
+                { count: 6000, size: 0.01, speed: 0.0001, range: 25 },
+                { count: 3000, size: 0.025, speed: 0.0002, range: 25 },
+                { count: 1000, size: 0.04, speed: 0.0003, range: 25 }
+            ];
+
+            starConfigs.forEach(config => {
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(config.count * 3);
+                for (let i = 0; i < config.count * 3; i++) {
+                    positions[i] = (Math.random() - 0.5) * config.range;
+                }
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                const material = new THREE.PointsMaterial({
+                    color: 0xffffff,
+                    size: config.size,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const stars = new THREE.Points(geometry, material);
+                stars.userData.speed = config.speed;
+                scene.add(stars);
+                starSystems.push(stars);
+            });
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onMouseMove, false);
+
+            animate();
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('hero');
+            if (!container) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            objects.forEach(obj => {
+                obj.rotation.x += 0.001;
+                obj.rotation.y += 0.002;
+            });
+            
+            starSystems.forEach(stars => {
+                stars.rotation.y += stars.userData.speed;
+            });
+
+            camera.position.x += (mouse.x * 2 - camera.position.x) * 0.02;
+            camera.position.y += (mouse.y * 2 - camera.position.y) * 0.02;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        // --- FIREBASE AUTHENTICATION ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                console.log("User is signed in:", user.uid);
+                loadAllData();
+            } else {
+                console.log("User is signed out. Signing in anonymously...");
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                     signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                     signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
+                }
+            }
+        });
+        
+        // --- DATA RENDERING ---
+        const createProductCard = (product) => {
+            const originalPriceHTML = product.originalPrice ? `<del class="text-sm text-gray-500">Rp${product.originalPrice.toLocaleString('id-ID')}</del>` : '';
+            return `
+                <div class="bg-gray-800/50 rounded-lg shadow-md overflow-hidden transition-transform transform hover:-translate-y-2">
+                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <span class="text-xs font-semibold uppercase tracking-widest text-blue-400">${product.category}</span>
+                        <h3 class="text-xl font-bold mt-2 mb-1">${product.name}</h3>
+                        <p class="text-gray-400 text-sm mb-4 h-10">${product.tagline}</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-lg font-bold text-blue-400">Rp${(product.price || 0).toLocaleString('id-ID')}</span>
+                                ${originalPriceHTML}
+                            </div>
+                            <div class="flex items-center gap-1 text-yellow-400">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <span class="font-bold">${product.rating}</span>
+                            </div>
+                        </div>
+                        <a href="${product.link}" target="_blank" class="block w-full text-center mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition-colors">Lihat Detail</a>
+                    </div>
+                </div>
+            `;
+        };
+
+        const createGalleryItem = (item) => `
+            <div class="flex-shrink-0 w-64 h-64">
+                <img src="${item.url}" class="w-full h-full object-cover rounded-lg shadow-md">
+            </div>
+        `;
+
+        const createTestimonialCard = (testimonial) => `
+            <div class="flex-shrink-0 w-80 md:w-96 p-8 bg-gray-800/50 rounded-lg shadow-md">
+                <p class="text-gray-300 italic">"${testimonial.quote}"</p>
+                <div class="flex items-center mt-6">
+                    <img src="${testimonial.profileUrl || 'https://placehold.co/40x40/60A5FA/FFFFFF?text=A'}" class="w-12 h-12 rounded-full object-cover mr-4">
+                    <div>
+                        <p class="font-bold text-gray-200">${testimonial.author}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        function renderMarquee(containerId, items, renderer) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const content = items.map(renderer).join('');
+            // Duplicate content for seamless loop
+            container.innerHTML = content + content;
+        }
+
+        function loadAllData() {
+            // Load All Products for Admin Panel
+            onSnapshot(query(productsCol, orderBy("createdAt", "desc")), (snapshot) => {
+                allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAdminProducts(allProducts);
+            });
+            
+            // Load Best Seller Products for Homepage (FIXED: No index required)
+            const bestSellersQuery = query(productsCol, where('isBestSeller', '==', true));
+            onSnapshot(bestSellersQuery, (snapshot) => {
+                const bestSellerProducts = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => (b.bestSellerAt?.toMillis() || 0) - (a.bestSellerAt?.toMillis() || 0)) // Sort descending by timestamp
+                    .slice(0, BEST_SELLER_LIMIT); // Limit to 6
+
+                const grid = document.getElementById('products-grid');
+                if (bestSellerProducts.length > 0) {
+                    grid.innerHTML = bestSellerProducts.map(createProductCard).join('');
+                } else {
+                    grid.innerHTML = '<p class="text-gray-400 col-span-full text-center">Belum ada produk terlaris saat ini.</p>';
+                }
+            });
+
+            // Load Gallery
+            onSnapshot(query(galleryCol, orderBy("createdAt", "desc")), (snapshot) => {
+                allGalleryItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderMarquee('gallery-marquee', allGalleryItems, createGalleryItem);
+                renderAdminGallery(allGalleryItems);
+            });
+
+            // Load Testimonials
+            onSnapshot(query(testimonialsCol, orderBy("createdAt", "desc")), (snapshot) => {
+                allTestimonials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderMarquee('testimonials-marquee', allTestimonials, createTestimonialCard);
+                renderAdminTestimonials(allTestimonials);
+            });
+        }
+        
+        // --- ADMIN PANEL LOGIC ---
+        function openAdminModal() { adminModal.classList.remove('hidden'); }
+        function closeAdminModal() {
+            adminModal.classList.add('hidden');
+            loginView.style.display = 'block';
+            dashboardView.style.display = 'none';
+            adminPasswordInput.value = '';
+            loginError.classList.add('hidden');
+        }
+
+        adminButton.addEventListener('click', openAdminModal);
+        closeModalButton.addEventListener('click', closeAdminModal);
+        logoutButton.addEventListener('click', closeAdminModal);
+        
+        const handleLogin = () => {
+            if (adminPasswordInput.value === atob(OBFUSCATED_PASSCODE)) {
+                loginView.style.display = 'none';
+                dashboardView.style.display = 'flex';
+                loginError.classList.add('hidden');
+            } else {
+                loginError.classList.remove('hidden');
+            }
+        };
+        loginSubmitButton.addEventListener('click', handleLogin);
+        adminPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // Admin Tabs
+        const tabs = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('admin-tab-active'));
+                tab.classList.add('admin-tab-active');
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(tab.dataset.tab).classList.remove('hidden');
+            });
+        });
+
+        // --- HELPERS ---
+        function parsePrice(priceString) {
+            if (typeof priceString !== 'string' || !priceString) return null;
+            return Number(String(priceString).replace(/\./g, ''));
+        }
+
+        // --- CRUD OPERATIONS ---
+        
+        // Product Management
+        const productForm = document.getElementById('product-form');
+        const clearProductFormBtn = document.getElementById('clear-product-form');
+
+        const resetProductForm = () => {
+            productForm.reset();
+            document.getElementById('product-id').value = '';
+        };
+
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Menyimpan...';
+
+            const id = document.getElementById('product-id').value;
+            const isBestSellerChecked = document.getElementById('product-isBestSeller').checked;
+            
+            const productData = {
+                name: document.getElementById('product-name').value,
+                tagline: document.getElementById('product-tagline').value,
+                imageUrl: document.getElementById('product-imageUrl').value,
+                link: document.getElementById('product-link').value,
+                price: parsePrice(document.getElementById('product-price').value),
+                originalPrice: parsePrice(document.getElementById('product-originalPrice').value) || null,
+                rating: Number(document.getElementById('product-rating').value),
+                category: document.getElementById('product-category').value,
+                isBestSeller: isBestSellerChecked,
+                ...(!id && { createdAt: serverTimestamp() }), // Only add createdAt for new products
+                ...(isBestSellerChecked && { bestSellerAt: serverTimestamp() })
+            };
+
+            try {
+                // Automatic rotation logic for best sellers (FIXED: No index required)
+                if (isBestSellerChecked) {
+                    const currentBestSellersQuery = query(productsCol, where('isBestSeller', '==', true));
+                    const querySnapshot = await getDocs(currentBestSellersQuery);
+                    
+                    const bestSellersDocs = querySnapshot.docs
+                        .map(doc => ({ id: doc.id, ...doc.data() }))
+                        .sort((a, b) => (a.bestSellerAt?.toMillis() || 0) - (b.bestSellerAt?.toMillis() || 0)); // Sort ascending
+                    
+                    const bestSellersIds = bestSellersDocs.map(d => d.id);
+                    
+                    if (bestSellersIds.length >= BEST_SELLER_LIMIT && !bestSellersIds.includes(id)) {
+                        const oldestBestSellerId = bestSellersIds[0];
+                        await updateDoc(doc(productsCol, oldestBestSellerId), {
+                            isBestSeller: false,
+                            bestSellerAt: null
+                        });
+                    }
+                }
+
+                // Save the current product
+                if (id) {
+                    await setDoc(doc(productsCol, id), productData, { merge: true });
+                } else {
+                    await addDoc(productsCol, productData);
+                }
+                resetProductForm();
+                submitButton.innerHTML = '<span class="text-green-400">Tersimpan!</span>';
+            } catch (error) {
+                console.error("Error saving product:", error);
+                submitButton.innerHTML = '<span class="text-red-400">Gagal!</span>';
+            } finally {
+                setTimeout(() => {
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                }, 2000);
+            }
+        });
+        clearProductFormBtn.addEventListener('click', resetProductForm);
+
+        function renderAdminProducts(products) {
+            const listContainer = document.getElementById('admin-products-list');
+            if (products.length === 0) {
+                listContainer.innerHTML = `<p class="text-gray-400 text-center italic">Belum ada produk yang disimpan.</p>`;
+                return;
+            }
+            listContainer.innerHTML = products.map(p => `
+                <div class="flex justify-between items-center p-2 bg-gray-700 rounded-md">
+                    <div>
+                      <span class="truncate">${p.name}</span>
+                      ${p.isBestSeller ? '<span class="ml-2 text-xs bg-yellow-500 text-black font-bold px-2 py-1 rounded-full">Terlaris</span>' : ''}
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="edit-product-btn text-blue-500 hover:underline text-sm" data-id='${p.id}'>Edit</button>
+                        <button class="delete-product-btn text-red-500 hover:underline text-sm" data-id='${p.id}'>Hapus</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('admin-products-list').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-product-btn');
+            const deleteBtn = e.target.closest('.delete-product-btn');
+
+            if (editBtn) {
+                const productId = editBtn.dataset.id;
+                const product = allProducts.find(p => p.id === productId);
+                if (product) {
+                    document.getElementById('product-id').value = product.id;
+                    document.getElementById('product-name').value = product.name;
+                    document.getElementById('product-tagline').value = product.tagline;
+                    document.getElementById('product-imageUrl').value = product.imageUrl;
+                    document.getElementById('product-link').value = product.link;
+                    document.getElementById('product-price').value = product.price;
+                    document.getElementById('product-originalPrice').value = product.originalPrice || '';
+                    document.getElementById('product-rating').value = product.rating;
+                    document.getElementById('product-category').value = product.category;
+                    document.getElementById('product-isBestSeller').checked = product.isBestSeller || false;
+                }
+            }
+
+            if (deleteBtn) {
+                const productId = deleteBtn.dataset.id;
+                await deleteDoc(doc(productsCol, productId));
+            }
+        });
+
+        // Gallery Management
+        const galleryForm = document.getElementById('gallery-form');
+        galleryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Menambah...';
+            
+            const url = document.getElementById('gallery-url').value;
+            if (url) {
+                try {
+                    await addDoc(galleryCol, { url, createdAt: serverTimestamp() });
+                    galleryForm.reset();
+                    submitButton.innerHTML = '<span class="text-green-400">Ditambah!</span>';
+                } catch(error) {
+                    console.error("Error adding gallery item: ", error);
+                    submitButton.innerHTML = '<span class="text-red-400">Gagal!</span>';
+                } finally {
+                     setTimeout(() => {
+                        submitButton.innerHTML = originalButtonText;
+                        submitButton.disabled = false;
+                    }, 2000);
+                }
+            }
+        });
+
+        function renderAdminGallery(gallery) {
+            const listContainer = document.getElementById('admin-gallery-list');
+             if (gallery.length === 0) {
+                listContainer.innerHTML = `<p class="text-gray-400 text-center italic col-span-full">Belum ada gambar di galeri.</p>`;
+                return;
+            }
+            listContainer.innerHTML = gallery.map(item => `
+                <div class="relative group">
+                    <img src="${item.url}" class="w-full h-24 object-cover rounded-md">
+                    <button class="delete-gallery-btn absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" data-id="${item.id}">X</button>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('admin-gallery-list').addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('.delete-gallery-btn');
+            if (deleteBtn) {
+                const itemId = deleteBtn.dataset.id;
+                await deleteDoc(doc(galleryCol, itemId));
+            }
+        });
+
+        // Testimonial Management
+        const testimonialForm = document.getElementById('testimonial-form');
+        const clearTestimonialFormBtn = document.getElementById('clear-testimonial-form');
+
+        const resetTestimonialForm = () => {
+            testimonialForm.reset();
+            document.getElementById('testimonial-id').value = '';
+        };
+
+        testimonialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Menyimpan...';
+
+            const id = document.getElementById('testimonial-id').value;
+            const testimonialData = {
+                quote: document.getElementById('testimonial-quote').value,
+                author: document.getElementById('testimonial-author').value,
+                profileUrl: document.getElementById('testimonial-profileUrl').value || null,
+                createdAt: serverTimestamp()
+            };
+            
+            try {
+                if(id) {
+                    await setDoc(doc(testimonialsCol, id), testimonialData, { merge: true });
+                } else {
+                    await addDoc(testimonialsCol, testimonialData);
+                }
+                resetTestimonialForm();
+                submitButton.innerHTML = '<span class="text-green-400">Tersimpan!</span>';
+            } catch (error) {
+                console.error("Error saving testimonial:", error);
+                submitButton.innerHTML = '<span class="text-red-400">Gagal!</span>';
+            } finally {
+                 setTimeout(() => {
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                }, 2000);
+            }
+        });
+        clearTestimonialFormBtn.addEventListener('click', resetTestimonialForm);
+
+        function renderAdminTestimonials(testimonials) {
+            const listContainer = document.getElementById('admin-testimonials-list');
+            if (testimonials.length === 0) {
+                listContainer.innerHTML = `<p class="text-gray-400 text-center italic">Belum ada testimoni yang disimpan.</p>`;
+                return;
+            }
+            listContainer.innerHTML = testimonials.map(t => `
+                <div class="flex justify-between items-center p-2 bg-gray-700 rounded-md">
+                    <span class="truncate">${t.author}: "${t.quote.substring(0,20)}..."</span>
+                    <div class="flex gap-2">
+                        <button class="edit-testimonial-btn text-blue-500 hover:underline text-sm" data-id='${t.id}'>Edit</button>
+                        <button class="delete-testimonial-btn text-red-500 hover:underline text-sm" data-id='${t.id}'>Hapus</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('admin-testimonials-list').addEventListener('click', async (e) => {
+             const editBtn = e.target.closest('.edit-testimonial-btn');
+            const deleteBtn = e.target.closest('.delete-testimonial-btn');
+            
+            if (editBtn) {
+                const testimonialId = editBtn.dataset.id;
+                const testimonial = allTestimonials.find(t => t.id === testimonialId);
+                 if (testimonial) {
+                    document.getElementById('testimonial-id').value = testimonial.id;
+                    document.getElementById('testimonial-quote').value = testimonial.quote;
+                    document.getElementById('testimonial-author').value = testimonial.author;
+                    document.getElementById('testimonial-profileUrl').value = testimonial.profileUrl || '';
+                }
+            }
+            
+            if (deleteBtn) {
+                const testimonialId = deleteBtn.dataset.id;
+                await deleteDoc(doc(testimonialsCol, testimonialId));
+            }
+        });
+        
+        // --- SCROLL ANIMATION ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // --- FAQ Accordion Logic ---
+        const faqContainer = document.getElementById('faq-container');
+        if (faqContainer) {
+            faqContainer.addEventListener('click', (e) => {
+                const questionButton = e.target.closest('.faq-question');
+                if (questionButton) {
+                    const faqItem = questionButton.parentElement;
+                    faqContainer.querySelectorAll('.faq-item.active').forEach(item => {
+                        if(item !== faqItem) item.classList.remove('active');
+                    });
+                    faqItem.classList.toggle('active');
+                }
+            });
+        }
+
+        // --- RUN APP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+        });
+    </script>
+</body>
+</html>
+
